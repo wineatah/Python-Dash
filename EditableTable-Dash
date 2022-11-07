@@ -1,0 +1,90 @@
+import base64
+import io
+from dash import Dash, dash_table, dcc, html
+from dash.dependencies import Input, Output, State
+import pandas as pd
+import xlsxwriter
+import os
+from threading import Timer
+import webbrowser
+
+df = pd.read_excel('/workspace/Profile/InvestCorp.xlsx')
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = Dash(__name__, external_stylesheets=external_stylesheets)
+
+app.layout = html.Div([
+    
+    dash_table.DataTable(
+        id='Investcorp_table',
+        data=df.to_dict('records'),
+        columns = [
+            {'id':'Area', 'name':'Area','editable':False},
+            {'id':'Audit Entity', 'name':'Audit Entity','editable':False},
+            {'id':'Strategic ','name':'Strategic','type': 'numeric',
+            'on_change': {
+                'action': 'coerce',
+                'failure': 'reject'
+            }},
+            {'id':'Legal / Regulatory / Reputational','name':'Legal / Regulatory / Reputational','type': 'numeric',
+            'on_change': {
+                'action': 'coerce',
+                'failure': 'reject'
+            }},
+            {'id':'Product / Service / Process','name':'Product / Service / Process','type': 'numeric',
+            'on_change': {
+                'action': 'coerce',
+                'failure': 'reject'
+            }},
+            {'id':'Risk','name':'Risk','type': 'numeric',
+            'on_change': {
+                'action': 'coerce',
+                'failure': 'reject'
+            }},
+            {'id':'Control Environment','name':'Control Environment','type': 'numeric',
+            'on_change': {
+                'action': 'coerce',
+                'failure': 'reject'
+            }},
+            {'id':'Management risk and control awareness','name':'anagement risk and control awareness','type': 'numeric',
+            'on_change': {
+                'action': 'coerce',
+                'failure': 'reject'
+            }}
+            ],
+        editable=True,
+        export_format='xlsx',
+        
+         style_data={
+                 'whiteSpace': 'normal',
+                 'height': 'auto'},
+                 style_cell={
+                     'minWidth': '0', 'maxWidth': '180px',
+                     'whiteSpace': 'normal',
+                     'textOverflow': 'ellipsis',
+                     'overflow': 'hidden'
+                     },
+),
+html.Button("Save Changes onto Server", id='changes_xlsx'),
+dcc.Download(id='download-Investcorp-xlsx'),
+ 
+])
+
+@app.callback(
+    Output("download-Investcorp-xlsx","data"),
+    Input("changes_xlsx","n_clicks"),
+    [State("Investcorp_table", "data")],
+    prevent_initial_call=True,
+    )
+def download_DataTable(n_clicks,data):
+    df = pd.DataFrame.from_records(data)
+    df.to_excel(r'/workspace/Profile/InvestCorp.xlsx', index=False)
+
+def open_browser():
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        webbrowser.open_new('http://127.0.0.1:1222/')
+
+if __name__ == '__main__':
+    Timer(1, open_browser).start()
+    app.run_server(debug=True, port=1222)
